@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Webcam from 'react-webcam';
-import { Camera } from 'lucide-react';
-import { usePoseDetection } from '../../hooks/usePoseDetectionNew';
+import { Camera, Activity, Target, TrendingUp, RotateCcw } from 'lucide-react';
+import { usePoseDetection } from '../../hooks/usePoseDetection';
 
 interface PoseEstimationProps {
   isActive: boolean;
@@ -23,7 +23,12 @@ const PoseEstimation: React.FC<PoseEstimationProps> = ({
   const { 
     startPoseDetection, 
     stopPoseDetection, 
-    isDetecting 
+    isDetecting,
+    isInitialized,
+    repCount,
+    formScore,
+    currentPhase,
+    resetMetrics
   } = usePoseDetection({
     webcamRef,
     canvasRef,
@@ -33,12 +38,34 @@ const PoseEstimation: React.FC<PoseEstimationProps> = ({
   });
 
   useEffect(() => {
-    if (isActive && !isDetecting) {
+    if (isActive && !isDetecting && isInitialized) {
       startPoseDetection();
     } else if (!isActive && isDetecting) {
       stopPoseDetection();
     }
-  }, [isActive, isDetecting, startPoseDetection, stopPoseDetection]);
+  }, [isActive, isDetecting, isInitialized, startPoseDetection, stopPoseDetection]);
+
+  // Handle exercise reset
+  const handleReset = () => {
+    resetMetrics();
+  };
+
+  // Get form score color based on score
+  const getFormScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-400';
+    if (score >= 60) return 'text-yellow-400';
+    if (score >= 40) return 'text-orange-400';
+    return 'text-red-400';
+  };
+
+  // Get phase indicator color
+  const getPhaseColor = (phase: string) => {
+    switch (phase) {
+      case 'up': return 'text-blue-400';
+      case 'down': return 'text-purple-400';
+      default: return 'text-gray-400';
+    }
+  };
 
   // Check camera permissions
   useEffect(() => {
@@ -90,6 +117,80 @@ const PoseEstimation: React.FC<PoseEstimationProps> = ({
         ref={canvasRef}
         className="absolute top-0 left-0 w-full h-full object-contain"
       />
+      
+      {/* AI Analytics Overlay */}
+      {isInitialized && (
+        <div className="absolute top-4 left-4 right-4 z-10">
+          {/* Status Indicator */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${isDetecting ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`} />
+              <span className="text-white text-sm font-medium">
+                {isDetecting ? 'Tracking Active' : 'Tracking Paused'}
+              </span>
+            </div>
+            <button
+              onClick={handleReset}
+              className="flex items-center space-x-1 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span className="text-sm">Reset</span>
+            </button>
+          </div>
+
+          {/* Real-time Metrics */}
+          <div className="grid grid-cols-3 gap-3">
+            {/* Rep Counter */}
+            <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+              <div className="flex items-center space-x-2 mb-1">
+                <Activity className="w-4 h-4 text-blue-400" />
+                <span className="text-xs text-gray-300 uppercase tracking-wide">Reps</span>
+              </div>
+              <div className="text-2xl font-bold text-white">{repCount}</div>
+            </div>
+
+            {/* Form Score */}
+            <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+              <div className="flex items-center space-x-2 mb-1">
+                <Target className="w-4 h-4 text-green-400" />
+                <span className="text-xs text-gray-300 uppercase tracking-wide">Form</span>
+              </div>
+              <div className={`text-2xl font-bold ${getFormScoreColor(formScore)}`}>
+                {formScore}%
+              </div>
+            </div>
+
+            {/* Current Phase */}
+            <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+              <div className="flex items-center space-x-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-purple-400" />
+                <span className="text-xs text-gray-300 uppercase tracking-wide">Phase</span>
+              </div>
+              <div className={`text-lg font-semibold capitalize ${getPhaseColor(currentPhase)}`}>
+                {currentPhase || 'Ready'}
+              </div>
+            </div>
+          </div>
+
+          {/* Exercise Type Display */}
+          <div className="mt-3 bg-black/50 backdrop-blur-sm rounded-lg p-2 border border-white/20">
+            <div className="text-center text-sm text-gray-300">
+              Exercise: <span className="text-white font-medium capitalize">{exerciseType}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {!isInitialized && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto mb-4"></div>
+            <p className="text-lg font-medium">Initializing AI Model...</p>
+            <p className="text-sm text-gray-300 mt-2">Setting up MediaPipe and BiLSTM</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
