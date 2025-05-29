@@ -25,12 +25,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { user, token } = await auth.register(email, password, displayName);
       
+      console.log('📝 Received user object from API:', user);
+      
       const newUser: UserProfile = {
         id: (user as any).id || (user as any)._id,
         email: (user as any).email,
         displayName: (user as any).displayName,
         createdAt: (user as any).createdAt,
       };
+      
+      console.log('✅ Created UserProfile:', newUser);
       
       // Store token in localStorage
       localStorage.setItem('authToken', token);
@@ -40,6 +44,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false 
       });
     } catch (error) {
+      console.error('❌ Registration error:', error);
       set({ 
         error: (error as Error).message, 
         isLoading: false 

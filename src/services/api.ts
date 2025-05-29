@@ -15,6 +15,12 @@ import {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API !== 'false'; // Default to true for development
 
+console.log('🔧 API Configuration:', {
+  USE_MOCK_API,
+  API_BASE_URL,
+  VITE_USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API
+});
+
 // Helper function to make API requests
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('authToken');
@@ -42,8 +48,10 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
 export const auth = {
   async register(email: string, password: string, displayName: string) {
     if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API for registration');
       return mockAuth.register(email, password, displayName);
     }
+    console.log('🌐 Using Real API for registration');
     return apiRequest('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, displayName }),
