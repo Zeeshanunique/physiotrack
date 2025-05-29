@@ -64,9 +64,8 @@ export const auth = {
     if (USE_MOCK_API) {
       return mockAuth.verifyToken(token);
     }
-    return apiRequest('/auth/verify', {
-      method: 'POST',
-      body: JSON.stringify({ token }),
+    return apiRequest('/auth/profile', {
+      method: 'GET',
     });
   }
 };

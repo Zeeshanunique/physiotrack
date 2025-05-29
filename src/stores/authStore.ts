@@ -26,7 +26,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user, token } = await auth.register(email, password, displayName);
       
       const newUser: UserProfile = {
-        id: (user as any)._id.toString(),
+        id: (user as any).id || (user as any)._id,
         email: (user as any).email,
         displayName: (user as any).displayName,
         createdAt: (user as any).createdAt,
@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user, token } = await auth.login(email, password);
       
       const userProfile: UserProfile = {
-        id: (user as any)._id.toString(),
+        id: (user as any).id || (user as any)._id,
         email: (user as any).email,
         displayName: (user as any).displayName,
         createdAt: (user as any).createdAt,
@@ -135,7 +135,7 @@ const initializeAuth = async () => {
       const user = await auth.verifyToken(token);
       if (user) {
         const userProfile: UserProfile = {
-          id: (user as any)._id.toString(),
+          id: (user as any).id || (user as any)._id,
           email: (user as any).email,
           displayName: (user as any).displayName,
           createdAt: (user as any).createdAt,
